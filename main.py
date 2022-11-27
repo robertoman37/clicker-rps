@@ -110,8 +110,9 @@ class home_menu:
                         if self.home_menu_items[self.cursor_pos[0] % 2]\ # PEP8 FORMATTING PLEASE STOP COMPLAINING I KNOW YOUR IP
                                 [self.cursor_pos[1] % 3] == v:
                             w.addstr(self.home_menu_pos[p1][p2][0],
-                            self.home_menu_pos[p1][p2][1],
-                            v, curses.A_REVERSE)
+                                self.home_menu_pos[p1][p2][1],
+                                v,
+                                curses.A_REVERSE)
                          else:
                             w.addstr(self.home_menu_pos[p1][p2][0],
                             self.home_menu_pos[p1][p2][1],
