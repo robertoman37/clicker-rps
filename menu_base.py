@@ -25,35 +25,35 @@ class singleline_text:
 
 class border:
     def __init__(self, pos, border_type="single_line"):
-    """
-    ----------------------------USAGE INSTRUCTIONS----------------------------
-                               Border_Type attribute
-    border_type is the type of the border
-    default value = single_line
-    AVAILABLE TYPES:
-      │ = single_line
-      ║ = double_line
-      ╓ = double_horiz
-      ╒ = double_vert
-                               Border_type attribute
-    border_pos is simply put, the position of the border.
-    AVAILABLE POSITIONS (with singleline type)
-      straight_vert      = │
-      straight_horiz     = ─
-      corner_topright    = ┐
-      corner_topleft     = ┌
-      corner_bottomright = ┘
-      corner_bottomleft  = └
-      horiz_vert_in      = ├
-      horiz_vert_out     = ┤
-      vert_horiz_up      = ┴
-      vert_horiz_down    = ┬
-      merge_bord         = ┼
-                                     NOTE
-    If you pass a value that is not one of the defined ones, that's your fault
-    not mine.
-    ------------------------------------------------------------------------
-    """
+        """
+        ----------------------------USAGE INSTRUCTIONS-------------------------
+                                   Border_Type attribute
+        border_type is the type of the border
+        default value = single_line
+        AVAILABLE TYPES:
+          │ = single_line
+          ║ = double_line
+          ╓ = double_horiz
+          ╒ = double_vert
+                                   Border_type attribute
+        border_pos is simply put, the position of the border.
+        AVAILABLE POSITIONS (with singleline type)
+          straight_vert      = │
+          straight_horiz     = ─
+          corner_topright    = ┐
+          corner_topleft     = ┌
+          corner_bottomright = ┘
+          corner_bottomleft  = └
+          horiz_vert_in      = ├
+          horiz_vert_out     = ┤
+          vert_horiz_up      = ┴
+          vert_horiz_down    = ┬
+          merge_bord         = ┼
+                                         NOTE
+        If you pass a value that is not one of the defined ones, that's your fault
+        not mine.
+        -----------------------------------------------------------------------
+        """
     import numpy as np
     border_poss = np.array([["straight_vert", "straight_horiz",
                              "corner_topright", "corner_topleft",
