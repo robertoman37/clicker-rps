@@ -1,16 +1,19 @@
-import curses
+import curses as curse
 import sys
 import random as rand
 import numpy as np
-from menu_base import *
+from menu_base import menu_base
 
 
 class home_menu:
 
-    def __init__(self):
-        self.first_turn = True
+    def __init__(self, last_move):
+        menu = menu_base()
+        menu.init((("rock", "paper", "scissors"),
+                        ("shop", "options", "exit")),
+                       (((11, 5), (11, 17), (11, 28)),
+                        ((13, 5), (13, 16), (13, 30))))
         self.last_move = [1, 1]
-        self.player_won = None
         self.money = 0
         self.graphics_list = ["""\
     _______
@@ -36,15 +39,6 @@ class home_menu:
       (____)
 ---.__(___)
 """]
-
-    # variables for home menu
-    self.home_menu_items = (("rock", "paper", "scissors"),
-                            ("shop", "options", "exit"))
-    self.home_menu_pos = (((11, 5), (11, 17), (11, 28)),
-                                ((13, 5), (13, 16), (13, 30)))
-# ^ entires correspond to self.home_menu_items  in order
-
-    self.cursor_pos = [0, 0]
 
     def main(self):
         curses.wrapper(self.home)
@@ -85,57 +79,14 @@ class home_menu:
         while True:
             try:
                 # get input and change cursor_pos correspondingly
-                uin = w.getch()
-                if uin == 259:
-                    self.cursor_pos[0] -= 1
-
-                elif uin == 258:
-                    self.cursor_pos[0] += 1
-
-                elif uin == 261:
-                    self.cursor_pos[1] += 1
-
-                elif uin == 260:
-                    self.cursor_pos[1] -= 1
-
-                # enter submenu or enter game phase
-                elif uin == 10:
-                    self.process_input(self.cursor_pos,
-                                       self.home_menu_items,
-                                       w)
+                menu.Input()
 
                 # write buffer: includes graphical renditions.
-                for p1, i in enumerate(self.home_menu_items):
-                    for p2, v in enumerate(i):
-                        if self.home_menu_items[self.cursor_pos[0] % 2]\ # PEP8 FORMATTING PLEASE STOP COMPLAINING I KNOW YOUR IP
-                                [self.cursor_pos[1] % 3] == v:
-                            w.addstr(self.home_menu_pos[p1][p2][0],
-                                self.home_menu_pos[p1][p2][1],
-                                v,
-                                curses.A_REVERSE)
-                         else:
-                            w.addstr(self.home_menu_pos[p1][p2][0],
-                            self.home_menu_pos[p1][p2][1],
-                            v)
-        w.refresh()
-        except IndexError:
-            if self.cursor_pos[1] >= 2:
-                self.cursor_pos[1] -= 1
-            elif self.cursor_pos[0] >= 3:
-                self.cursor_pos -= 1
-    
-    def process_input(self, input, menu_list, w):
-        if menu_list == (("rock", "paper", "scissors"),
-                         ("shop", "options", "exit")):
-        if input[0] == 0:
-            self.game_logic(input[1], w)
-        else:
-            if input[1] == 0:
-                self.shop(w)
-            elif input[1] == 1:
-                self.options(w)
-            elif input[1] == 2:
-                sys.exit()
+                menu_base.write_buffer(curses)
+            except IndexError:
+                while True:
+                    w.clear()
+                    w.addstr(0, 0, "a;sldjfa;skd fh;aksjdh f;alksdj ;flaks d;flaks d;flka sd;lf jas;dfkjasl fdkja slkdjflak sjd;f lkajs; kfas;dl fkajs d;flasjd;f lkasd;f lajsd; fljasd kfa;sdl fj;asldohi sda ;isda ;hl sda; a hk a lhu saf8 r c   4  zszn ez 43v   ;asldkfh;oa idudr[0aw 8uetklajshe tlkasdjxhl kasjd ;kj")
 
     def game_logic(self, input, w):
         ai_input = rand.randint(0,2)
@@ -150,5 +101,5 @@ class home_menu:
         else:
             self.player_won = None
 
-game = home_menu()
+game = home_menu([1,1])
 game.main()

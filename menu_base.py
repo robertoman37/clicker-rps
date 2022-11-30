@@ -33,7 +33,7 @@ class menu_base:
         #   ^^^ Will eventually assign values to each menu. Uinimplemented for
         #       now
 
-    def write_buffer(self, w):
+    def write_buffer(self, w, curses):
         for p1, i in enumerate(self.menu_items):
             for p2, v in enumerate(i):
                 if self.menu_items[self.cursor_pos[0] % len(self.menu_items)]\
