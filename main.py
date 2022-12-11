@@ -12,8 +12,6 @@ class menu_base:
     """
 
     def __init__(self, menu_items, menu_pos):
-        """define in here whatever other things you need to do for your menu to
-        work."""
         self.menu_items = menu_items
         self.menu_pos = menu_pos
         self.cursor_pos = [0, 0]
@@ -56,23 +54,23 @@ class menu_base:
 class home_menu(menu_base):
 
     def __init__(self, last_move):
-        """last move is the winner of the last turn.
-        0 = no one
-        1 = player
-        2 = ai
-        -1 = custom message, reserved value"""
+        """last_move is a two element list of the last moves done.
+        -1 = reserved value, first move/ tutorial
+        0 = rock
+        1 = paper
+        2 = scissors"""
         menu_items = (("rock", "paper", "scissors"), ("shop", "options", "exit"))
         menu_pos = (((11, 5), (11, 17), (11, 28)), ((13, 5), (13, 16), (13, 30)))
         super().__init__(menu_items, menu_pos)
-        self.last_move = [1, 1]
+        self.last_move = last_move
         self.money = 0
         self.graphics_list = ["""\
-    _______
----'   ____)
+    _______  
+---'   ____) 
       (_____)
       (_____)
-      (____)
----.__(___)
+      (____) 
+---.__(___)  
 """,
                           """\
      _______      
@@ -83,12 +81,12 @@ class home_menu(menu_base):
 ---.__________)   
 """,
                           """\
-    _______
----'   ____)____
-          ______)
+    _______       
+---'   ____)____  
+          ______) 
        __________)
-      (____)
----.__(___)
+      (____)      
+---.__(___)       
 """]
 
     def main(self):
@@ -100,10 +98,10 @@ class home_menu(menu_base):
                         i for i in var])
 
     def home(self, w):
-        a = lambda:\
-            f"{' '*37}" if self.last_move == -1 else\
-            f"{' '*13}Player Won!{' '*13}" if self.last_move == 1 else\
-            f"{' '*15}AI Won!{' '*15}" if self.last_move == 2 else\
+        a = lambda b:\
+            f"{' '*37}" if b == -1 else\
+            f"{' '*13}Player Won!{' '*13}" if b == 1 else\
+            f"{' '*15}AI Won!{' '*15}" if b == 2 else\
             f"{' '*13}Nobody Won!{' '*13}"
         curses.curs_set(0)
         w.clear()
@@ -111,7 +109,7 @@ class home_menu(menu_base):
                   "┌──────────────────┬──────────────────┐\n"+
                   "│                  │                  │\n"*7+
                   "├──────────────────┴──────────────────┤\n"+
-                 f"│{a()}│\n"+
+                 f"│{a(self.game_logic(self.last_move, True))}│\n"+
                   "├────────────┬───────────┬────────────┤\n"+
                   "│    rock    │   paper   │  scissors  │\n"+
                   "├────────────┼───────────┼────────────┤\n"+
@@ -121,11 +119,11 @@ class home_menu(menu_base):
         self.last_move[1] in range(len(self.graphics_list)):
             player_graphic = self.graphics_list[self.last_move[0]].splitlines()
             ai_graphic = self.graphics_list[self.last_move[1]].splitlines()
-        for i in range(6):
-            player_graphic_line = player_graphic[i]
-            ai_graphic_line = ai_graphic[i][::-1]
-            w.addstr(i+1, 1, player_graphic_line)
-            w.addstr(i+1, 20, self.reverse_parenthesis(ai_graphic_line))
+            for i in range(6):
+                player_graphic_line = player_graphic[i]
+                ai_graphic_line = ai_graphic[i][::-1]
+                w.addstr(i+1, 1, player_graphic_line)
+                w.addstr(i+1, 20, self.reverse_parenthesis(ai_graphic_line))
         while True:
             try:
                 # get input and change cursor_pos correspondingly
@@ -138,18 +136,38 @@ class home_menu(menu_base):
                     w.clear()
                     w.addstr(0, 0, "a;sldjfa;skd fh;aksjdh f;alksdj ;flaks d;flaks d;flka sd;lf jas;dfkjasl fdkja slkdjflak sjd;f lkajs; kfas;dl fkajs d;flasjd;f lkasd;f lajsd; fljasd kfa;sdl fj;asldohi sda ;isda ;hl sda; a hk a lhu saf8 r c   4  zszn ez 43v   ;asldkfh;oa idudr[0aw 8uetklajshe tlkasdjxhl kasjd ;kj")
 
-    def game_logic(self, input, w):
-        ai_input = rand.randint(0,2)
+    def game_logic(self, input, ig_ran):
+        """If ig_ran = true, ingores random and takes a two integer list entry
+        If not, generates a random number for ai_input"""
+        if ig_ran and len(input) == 2:
+            ai_input = input[1]
+            input = input[0]
+        else:
+            ai_input = rand.randint(0,2)
+        
         if ai_input == 0 and input == 1 or\
         ai_input == 1 and input == 2 or\
         ai_input == 3 and input == 0:
-            self.player_won = True
+            return 1
         elif input == 0 and ai_input == 1 or\
         ai_input == 1 and input == 2 or\
         ai_input == 2 and input == 0:
-            self.player_won = False
+            return 2
+        elif input == -1:
+            return -1
         else:
-            self.player_won = None
+            return 3
 
-game = home_menu(-1)
-game.main()
+menu = home_menu([1, 2])
+menu.main()
+
+class shop_menu(menu_base):
+    def __init__(self, resources, items_avail):
+        """resources is a dict of the resources available to the player as
+        well as their amounts. items_avail is a list of the items available
+        to the player in the shop"""
+        self.resources = resources
+        self.items_avail = items_avail
+        self.menu_items = ["quit"] + items_avail
+        self.menu_pos = [i for i in range(len(items_avail) + 2)]
+        menu_base.__init__(self.menu_items, self.menu_pos)
