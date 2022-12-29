@@ -60,7 +60,7 @@ class home_menu(menu_base):
         1 = paper
         2 = scissors"""
         menu_items = (("rock", "paper", "scissors"), ("shop", "options", "exit"))
-        menu_pos = (((11, 5), (11, 17), (11, 28)), ((13, 5), (13, 16), (13, 30)))
+        menu_pos = (((11, 5), (11, 19), (11, 32)), ((13, 5), (13, 18), (13, 34)))
         super().__init__(menu_items, menu_pos)
         self.last_move = last_move
         self.money = 0
@@ -99,22 +99,22 @@ class home_menu(menu_base):
 
     def home(self, w):
         a = lambda b:\
-            f"{' '*37}" if b == -1 else\
-            f"{' '*13}Player Won!{' '*13}" if b == 1 else\
-            f"{' '*15}AI Won!{' '*15}" if b == 2 else\
-            f"{' '*13}Nobody Won!{' '*13}"
+            f"{' '*41}" if b == -1 else\
+            f"{' '*15}Player Won!{' '*15}" if b == 1 else\
+            f"{' '*17}AI Won!{' '*17}" if b == 2 else\
+            f"{' '*15}Nobody Won!{' '*15}"
         curses.curs_set(0)
         w.clear()
         w.addstr(0, 0,
-                  "┌──────────────────┬──────────────────┐\n"+
-                  "│                  │                  │\n"*7+
-                  "├──────────────────┴──────────────────┤\n"+
+                  "┌────────────────────┬────────────────────┐\n"+
+                  "│                    │                    │\n"*7+
+                  "├────────────────────┴────────────────────┤\n"+
                  f"│{a(self.game_logic(self.last_move, True))}│\n"+
-                  "├────────────┬───────────┬────────────┤\n"+
-                  "│    rock    │   paper   │  scissors  │\n"+
-                  "├────────────┼───────────┼────────────┤\n"+
-                  "│    shop    │  options  │    exit    │\n"+
-                  "└────────────┴───────────┴────────────┘\n")
+                  "├────────────┬───────────────┬────────────┤\n"+
+                  "│    rock    │     paper     │  scissors  │\n"+
+                  "├────────────┼───────────────┼────────────┤\n"+
+                  "│    shop    │    options    │    exit    │\n"+
+                  "└────────────┴───────────────┴────────────┘\n")
         if self.last_move[0] in range(len(self.graphics_list)) or\
         self.last_move[1] in range(len(self.graphics_list)):
             player_graphic = self.graphics_list[self.last_move[0]].splitlines()
@@ -123,7 +123,7 @@ class home_menu(menu_base):
                 player_graphic_line = player_graphic[i]
                 ai_graphic_line = ai_graphic[i][::-1]
                 w.addstr(i+1, 1, player_graphic_line)
-                w.addstr(i+1, 20, self.reverse_parenthesis(ai_graphic_line))
+                w.addstr(i+1, 24, self.reverse_parenthesis(ai_graphic_line))
         while True:
             try:
                 # get input and change cursor_pos correspondingly
@@ -158,16 +158,207 @@ class home_menu(menu_base):
         else:
             return 3
 
-menu = home_menu([1, 2])
-menu.main()
-
 class shop_menu(menu_base):
     def __init__(self, resources, items_avail):
         """resources is a dict of the resources available to the player as
         well as their amounts. items_avail is a list of the items available
-        to the player in the shop"""
+        to the player in the shop (eventually will make into a list of items as 
+        a tuple including their name, a tuple for resources needed, and the
+        item's description. Item names cannot be more than 27 characters long, 
+        however the recommended limit is 9 characters. Everything past that 
+        starts getting kinda weird."""
+        
         self.resources = resources
         self.items_avail = items_avail
-        self.menu_items = ["quit"] + items_avail
-        self.menu_pos = [i for i in range(len(items_avail) + 2)]
-        menu_base.__init__(self.menu_items, self.menu_pos)
+        self.cursor_pos = 0
+        self.submenu = False
+        self.base_str = """┌────────────────────────────────────────┐
+│                  quit                  │
+└────────────────────────────────────────┘
+┌──────────────────────────────┬─────────┐
+│                              │         │
+│                              │         │
+│                              │         │
+│                              │         │
+│                              │         │
+│                              │         │
+│                              │         │
+│                              │         │
+│                              │         │
+└──────────────────────────────┴─────────┘"""
+        self.items_str = "".join([f"│┌────────────────────────────┐│\n││{' '*(14-(len(item[0])//2))}{item[0]}{' '*(14-(len(item[0])//2)-(len(item[0])%2))}││\n│└────────────────────────────┘│\n" for item in items_avail])
+        self.items_str += "│                              │\n"*10
+        
+    def menu_str(self, w, pos):
+        for p, i in enumerate(self.items_str.splitlines()[pos * 3:(pos * 3) + 9]):
+            w.addstr(4+p, 0, i)
+
+    def Input(self, w):
+        char = w.getch()
+        if char == 258 and self.cursor_pos <= len(self.items_avail) - 2:
+            self.cursor_pos += 1
+        if char == 259 and self.cursor_pos >= 0:
+            self.cursor_pos -= 1
+        if char == 10:
+            if self.cursor_pos == -1:
+                return None #Yet again, assign a value later
+            else:
+                self.submenu = not self.submenu
+                self.last_pos = self.cursor_pos
+                self.cursor_pos = 0
+                w.addstr(0, 0, self.base_str)
+    
+    def main(self):
+        curses.wrapper(self.shop_menu)
+
+#    def render_selection(self, w):
+#        w.chgat(1, 0, 42, curses.A_NORMAL)
+#        w.chgat(5, 0, 42, curses.A_NORMAL)
+#        if self.cursor_pos >= 0:
+            #self.xpos = len(f"││{' '*(16-(len(self.items_avail[self.cursor_pos])//2))}")
+#            w.chgat(5, 3, 32, curses.A_REVERSE)
+#        elif self.cursor_pos == -1:
+#            w.chgat(1, 1, 40, curses.A_REVERSE)
+    def render_selection(self, w):
+        # Highlight the quit button
+        if self.cursor_pos == -1:
+            w.chgat(1, 1, 40, curses.A_REVERSE)
+        else:
+            w.chgat(1, 0, 42, curses.A_NORMAL)
+            
+        # Highlight the selected menu item
+        # Menu items don't highlight (I think replit's fault). Will fix later
+        if self.cursor_pos >= 0:
+            x_pos = 3 + 13 - (len(self.items_avail[self.cursor_pos][0]) // 2)
+            w.chgat(5, x_pos, len(self.items_avail[self.cursor_pos][0]), curses.A_REVERSE)
+        else:
+            w.chgat(5, 0, 42, curses.A_NORMAL)
+
+    def submenu_input(self, w):
+        char = w.getch()
+        if char == 258 and self.cursor_pos <= 1:
+            self.cursor_pos += 1
+        if char == 259 and self.cursor_pos >= 1:
+            self.cursor_pos -= 1
+        if char == 10:
+            if self.cursor_pos == 0:
+                pass #make buying code later
+            if self.cursor_pos == 1:
+                self.details(w)
+            if self.cursor_pos == 2:
+                self.submenu = False
+                self.cursor_pos = self.last_pos
+                w.addstr(0, 0, self.base_str)
+    
+    def render_submenu(self, w):
+        for p, i in enumerate(self.prep_submenu_text(w)[:-1]):
+            w.addstr(4+p, 31, i)
+        if self.cursor_pos == 0:
+            w.chgat(10, 35, 3, curses.A_REVERSE)
+        elif self.cursor_pos == 1:
+            w.chgat(11, 33, 7, curses.A_REVERSE)
+        elif self.cursor_pos == 2:
+            w.chgat(12, 34, 5, curses.A_REVERSE)
+            
+    
+    def prep_submenu_text(self, w):
+        # Returns a list of strings to print for each row bc that's how curses 
+        # works
+        name = self.items_avail[self.last_pos][0]
+        if len(name) == 0:
+            raise Exception("You can't do that")
+        if len(name) in range(10):
+            return [f"│{' '*(4-len(name)//2)}{name}{' '*(5-len(name)//2-(len(name)%2))}│",
+                    "│         │",
+                    "│         │",
+                    "│         │",
+                    "│         │",
+                    "├─────────┤",
+                    "│   buy   │",
+                    "│ details │",
+                    "│  close  │",
+                   0]
+        elif len(name) in range(10, 19):
+            return [f"│{name[0:9]}│",
+                    f"│{' '*(4-len(name[9:19])//2)}{name[9:19]}{' '*(5-len(name[9:19])//2-(len(name[9:19])%2))}│",
+                    "│         │",
+                    "│         │",
+                    "│         │",
+                    "├─────────┤",
+                    "│   buy   │",
+                    "│ details │",
+                    "│  close  │",
+                   1]
+        elif len(name) in range(19, 28):
+            return [f"│{name[0:9]}│",
+                    f"│{name[9:19]}│"
+                    f"│{' '*(4-len(name[19:28])//2)}{name[19:28]}{' '*(5-len(name[19:28])//2-(len(name[19:28])%2))}│",
+                    "│         │",
+                    "│         │",
+                    "├─────────┤",
+                    "│   buy   │",
+                    "│ details │",
+                    "│  close  │",
+                   0]
+        else:
+            raise Exception("You can't do that")
+            
+  
+    def shop_menu(self, w):
+        w.addstr(0,0, self.base_str)
+        while True:
+            if not self.submenu:
+                self.menu_str(w, self.cursor_pos)
+                self.Input(w)
+                self.render_selection(w)
+                w.addstr(20,0," "*50)
+                w.addstr(20,0,f"{self.cursor_pos}           {self.items_avail[self.cursor_pos]}")
+            if self.submenu:
+                self.menu_str(w, self.last_pos)
+                self.render_submenu(w)
+                self.submenu_input(w)
+                w.addstr(20,0," "*50)
+                w.addstr(20,0,f"{self.cursor_pos}           {self.last_pos}")
+            w.refresh()
+
+    def details_str(self, w, item):
+        name = item[0]
+        resources = item[1]
+        description = item[2]
+        description += " "*(241-len(description))
+        w.addstr(0, 0, "┌────────────────────────────────────────┐\n"
+               f"│{name.center(40)}│\n"
+                "├─────────┬──────────────────────────────┤\n"
+               f"│rock:    │                              │\n"
+               f"│{resources[0]}{' '*(9-len(str(resources[0])))}│                              │\n"
+               f"│paper:   │                              │\n"
+               f"│{resources[1]}{' '*(9-len(str(resources[1])))}│                              │\n"
+               f"│scissors:│                              │\n"
+               f"│{resources[2]}{' '*(9-len(str(resources[2])))}│                              │\n"
+               f"│         │                              │\n"
+               f"│         │                              │\n"
+                "├─────────┴──────────────────────────────┤\n"
+                "│         Press any key to exit.         │\n"
+                "└────────────────────────────────────────┘\n")
+        w.addstr(3, 11, description[0:30])
+        w.addstr(4, 11, description[30:61])
+        w.addstr(5, 11, description[60:91])
+        w.addstr(6, 11, description[90:121])
+        w.addstr(7, 11, description[120:151])
+        w.addstr(8, 11, description[150:181])
+        w.addstr(9, 11, description[180:211])
+        w.addstr(10, 11, description[210:241])
+    def details(self, w):
+        self.details_str(w, self.items_avail[self.last_pos])
+        while True:
+            if w.getch() != -1:
+                self.shop_menu(w)
+                break
+            
+menu = shop_menu((1), [("placeholder", (0, 5, 0), "b"),
+                       ("man", (5, 3, 1), "g"),
+                       ("a", (30, 50, 30), "a"),
+                       ("catapult", (10, 5, 3), "20"),
+                       ("minors", (50, 30, 10), "ggggggg"),
+                       ("odd", (30, 10, 5), "bgalhk")])
+menu.main()
