@@ -3,6 +3,12 @@ import sys
 import random as rand
 import numpy as np
 
+"""-------------------------IMPORTANT INFORMATION-------------------------
+   |Idk why I'm making this so fancy, but all of the xxxx.main() classes |
+   |in the objects are just for testing. They won't be used in the final |
+   |code, because the wrapper class will simply use curses.wrapper() and |
+   |pass the w parameter to the classes"""
+
 class menu_base:
     """A base menu class for methods to make making menus in this game easier.
     Contains basic methods which should be inside the main event loop for all
@@ -31,9 +37,7 @@ class menu_base:
             self.cursor_pos[1] -= 1
 
         elif uin == 10:
-            return None
-        #   ^^^ Will eventually assign values to each menu. Uinimplemented for
-        #       now
+            self.process_input(w)
 
     def write_buffer(self, w):
         for p1, i in enumerate(self.menu_items):
@@ -49,6 +53,10 @@ class menu_base:
                              self.menu_pos[p1][p2][1],
                              v)
         w.refresh()
+
+    def process_input(self, w):
+        act = self.menu_items[self.cursor_pos[0]][self.cursor_pos[1]]
+        return ["rock", "paper", "scissors", "shop", "options", "exit", "start"].index(act)
         
 
 class home_menu(menu_base):
@@ -201,7 +209,7 @@ class shop_menu(menu_base):
             self.cursor_pos -= 1
         if char == 10:
             if self.cursor_pos == -1:
-                return None #Yet again, assign a value later
+                return 6
             else:
                 self.submenu = not self.submenu
                 self.last_pos = self.cursor_pos
@@ -305,6 +313,7 @@ class shop_menu(menu_base):
             
   
     def shop_menu(self, w):
+        curses.curs_set(0)
         w.addstr(0,0, self.base_str)
         while True:
             if not self.submenu:
@@ -341,24 +350,95 @@ class shop_menu(menu_base):
                 "│         Press any key to exit.         │\n"
                 "└────────────────────────────────────────┘\n")
         w.addstr(3, 11, description[0:30])
-        w.addstr(4, 11, description[30:61])
-        w.addstr(5, 11, description[60:91])
-        w.addstr(6, 11, description[90:121])
-        w.addstr(7, 11, description[120:151])
-        w.addstr(8, 11, description[150:181])
-        w.addstr(9, 11, description[180:211])
-        w.addstr(10, 11, description[210:241])
+        w.addstr(4, 11, description[30:60])
+        w.addstr(5, 11, description[60:90])
+        w.addstr(6, 11, description[90:120])
+        w.addstr(7, 11, description[120:150])
+        w.addstr(8, 11, description[150:180])
+        w.addstr(9, 11, description[180:210])
+        w.addstr(10, 11, description[210:240])
     def details(self, w):
         self.details_str(w, self.items_avail[self.last_pos])
         while True:
             if w.getch() != -1:
                 self.shop_menu(w)
                 break
-            
-menu = shop_menu((1), [("placeholder", (0, 5, 0), "b"),
+
+class start_menu:
+    def __init__(self):
+        self.cursor_pos = 0
+        self.string = [r"┌─────────────────────────────────────────────────────────────────────────────────────┐",
+r"│ ___   ________   ___        _______           ________   ________   ________        │",
+r"│ |\  \ |\   ___ \ |\  \      |\  ___ \         |\   __  \ |\   __  \ |\   ____\      │",
+r"│ \ \  \\ \  \_|\ \\ \  \     \ \   __/|        \ \  \|\  \\ \  \|\  \\ \  \___|_     │",
+r"│  \ \  \\ \  \ \\ \\ \  \     \ \  \_|/__       \ \   _  _\\ \   ____\\ \_____  \    │",
+r"│   \ \  \\ \  \_\\ \\ \  \____ \ \  \_|\ \       \ \  \\  \|\ \  \___| \|____|\  \   │",
+r"│    \ \__\\ \_______\\ \_______\\ \_______\       \ \__\\ _\ \ \__\      ____\_\  \  │",
+r"│     \|__| \|_______| \|_______| \|_______|        \|__|\|__| \|__|     |\_________\ │",
+r"│                                                                        \|_________| │",
+r"├─────────────────────────────────────────────────────────────────────────────────────┤",
+r"│                                        start                                        │",
+r"│                                        close                                        │",
+r"│                                       options                                       │",
+r"└─────────────────────────────────────────────────────────────────────────────────────┘"]
+    def main(self):
+        curses.wrapper(self.curses_main)
+    def print_str(self, w):
+        for p, v in enumerate(self.string):
+            w.addstr(p, 0, v)
+    def curses_main(self, w):
+        curses.curs_set(0)
+        self.print_str(w)
+        w.chgat(10, 41, 5, curses.A_REVERSE)
+        while True:
+            char = w.getch()
+
+            if char == 258 and self.cursor_pos <= 3:
+                self.cursor_pos += 1
+            if char == 259 and self.cursor_pos >= 1:
+                self.cursor_pos -= 1
+            if char == 10:
+                if self.cursor_pos == 0:
+                    return 6
+                if self.cursor_pos == 1:
+                    return 5
+                if self.cursor_pos == 2:
+                    return 4
+
+            # since cursor_pos only has 3 possibilities, this works fine?
+            if self.cursor_pos == 0:
+                w.chgat(10, 41, 5, curses.A_REVERSE)
+                w.chgat(11, 41, 5, curses.A_NORMAL)
+                w.chgat(12, 40, 7, curses.A_NORMAL)
+            if self.cursor_pos == 1:
+                w.chgat(10, 41, 5, curses.A_NORMAL)
+                w.chgat(11, 41, 5, curses.A_REVERSE)
+                w.chgat(12, 40, 7, curses.A_NORMAL)
+            if self.cursor_pos == 2:
+                w.chgat(10, 41, 5, curses.A_NORMAL)
+                w.chgat(11, 41, 5, curses.A_NORMAL)
+                w.chgat(12, 40, 7, curses.A_REVERSE)
+            w.refresh()
+#menu = shop_menu((1), [("placeholder", (0, 5, 0), "b"),
+#                       ("man", (5, 3, 1), "g"),
+#                       ("a", (30, 50, 30), "a"),
+#                       ("catapult", (10, 5, 3), "20"),
+#                       ("minors", (50, 30, 10), "ggggggg"),
+#                       ("odd", (30, 10, 5), "bgalhk")])
+class game:
+    def __init__(self):
+        self.items = [("placeholder", (0, 5, 0), "b"),
                        ("man", (5, 3, 1), "g"),
                        ("a", (30, 50, 30), "a"),
                        ("catapult", (10, 5, 3), "20"),
-                       ("minors", (50, 30, 10), "ggggggg"),
-                       ("odd", (30, 10, 5), "bgalhk")])
+                       ("miners", (50, 30, 10), "ggggggg"),
+                       ("odd", (30, 10, 5), "bgalhk")]
+        self.last_turn = [-1, -1]
+    def main(self):
+        curses.wrapper(self.main_curses())
+    def main_curses(self, w):
+        code = 0
+        while True:
+            break
+menu = start_menu()
 menu.main()
