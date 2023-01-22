@@ -140,9 +140,9 @@ class home_menu(menu_base):
         while True:
             try:
                 # get input and change cursor_pos correspondingly
-                code = super().Input(w)
-                if code != False:
-                    return code
+                rcode = super().Input(w)
+                if rcode != False:
+                    return rcode
 
                 # write buffer: includes graphical renditions.
                 super().write_buffer(w)
@@ -203,6 +203,7 @@ class shop_menu(menu_base):
 └──────────────────────────────┴─────────┘"""
         self.items_str = "".join([f"│┌────────────────────────────┐│\n││{' '*(14-(len(item[0])//2))}{item[0]}{' '*(14-(len(item[0])//2)-(len(item[0])%2))}││\n│└────────────────────────────┘│\n" for item in items_avail])
         self.items_str += "│                              │\n"*10
+        self.code = False
         
     def menu_str(self, w, pos):
         for p, i in enumerate(self.items_str.splitlines()[pos * 3:(pos * 3) + 9]):
@@ -216,7 +217,7 @@ class shop_menu(menu_base):
             self.cursor_pos -= 1
         if char == 10:
             if self.cursor_pos == -1:
-                return 6
+                self.code = True
             else:
                 self.submenu = not self.submenu
                 self.last_pos = self.cursor_pos
@@ -234,6 +235,8 @@ class shop_menu(menu_base):
 #            w.chgat(5, 3, 32, curses.A_REVERSE)
 #        elif self.cursor_pos == -1:
 #            w.chgat(1, 1, 40, curses.A_REVERSE)
+
+
     def render_selection(self, w):
         # Highlight the quit button
         if self.cursor_pos == -1:
@@ -326,6 +329,8 @@ class shop_menu(menu_base):
             if not self.submenu:
                 self.menu_str(w, self.cursor_pos)
                 self.Input(w)
+                if self.code:
+                    return 6
                 self.render_selection(w)
                 w.addstr(20,0," "*50)
                 w.addstr(20,0,f"{self.cursor_pos}           {self.items_avail[self.cursor_pos]}")
@@ -468,7 +473,7 @@ class game:
                 sys.exit()
             if code == 6:
                 menu = home_menu(self.last_turn)
-                menu.home(w)
+                code = menu.home(w)
             
                 
 #menu = start_menu()
