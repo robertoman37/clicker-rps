@@ -323,6 +323,7 @@ class shop_menu(menu_base):
             
   
     def shop_menu(self, w):
+        w.clear()
         curses.curs_set(0)
         w.addstr(0,0, self.base_str)
         while True:
