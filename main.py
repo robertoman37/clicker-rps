@@ -7,7 +7,8 @@ import numpy as np
    |Idk why I'm making this so fancy, but all of the xxxx.main() classes |
    |in the objects are just for testing. They won't be used in the final |
    |code, because the wrapper class will simply use curses.wrapper() and |
-   |pass the w parameter to the classes"""
+   |pass the w parameter to the classes.                                 |
+   -----------------------------------------------------------------------"""
 
 class menu_base:
     """A base menu class for methods to make making menus in this game easier.
@@ -26,18 +27,22 @@ class menu_base:
         uin = w.getch()
         if uin == 259:
             self.cursor_pos[0] -= 1
+            return False
 
         elif uin == 258:
             self.cursor_pos[0] += 1
+            return False
 
         elif uin == 261:
             self.cursor_pos[1] += 1
+            return False
 
         elif uin == 260:
             self.cursor_pos[1] -= 1
+            return False
 
         elif uin == 10:
-            self.process_input(w)
+            return self.process_input(w)
 
     def write_buffer(self, w):
         for p1, i in enumerate(self.menu_items):
@@ -135,7 +140,9 @@ class home_menu(menu_base):
         while True:
             try:
                 # get input and change cursor_pos correspondingly
-                super().Input(w)
+                code = super().Input(w)
+                if code != False:
+                    return code
 
                 # write buffer: includes graphical renditions.
                 super().write_buffer(w)
@@ -393,7 +400,7 @@ r"└─────────────────────────
         while True:
             char = w.getch()
 
-            if char == 258 and self.cursor_pos <= 3:
+            if char == 258 and self.cursor_pos <= 1:
                 self.cursor_pos += 1
             if char == 259 and self.cursor_pos >= 1:
                 self.cursor_pos -= 1
@@ -425,6 +432,7 @@ r"└─────────────────────────
 #                       ("catapult", (10, 5, 3), "20"),
 #                       ("minors", (50, 30, 10), "ggggggg"),
 #                       ("odd", (30, 10, 5), "bgalhk")])
+
 class game:
     def __init__(self):
         self.items = [("placeholder", (0, 5, 0), "b"),
@@ -435,10 +443,34 @@ class game:
                        ("odd", (30, 10, 5), "bgalhk")]
         self.last_turn = [-1, -1]
     def main(self):
-        curses.wrapper(self.main_curses())
+        curses.wrapper(self.main_curses)
     def main_curses(self, w):
-        code = 0
+        menu = start_menu()
+        code = menu.curses_main(w)
         while True:
-            break
-menu = start_menu()
+            if code == 0:
+                pass
+            if code == 1:
+                pass
+            if code == 2:
+                pass
+            if code == 3:
+                menu = shop_menu((1), [("placeholder", (0, 5, 0), "b"),
+                       ("man", (5, 3, 1), "g"),
+                       ("a", (30, 50, 30), "a"),
+                       ("catapult", (10, 5, 3), "20"),
+                       ("minors", (50, 30, 10), "ggggggg"),
+                       ("odd", (30, 10, 5), "bgalhk")])
+                code = menu.shop_menu(w)
+            if code == 4:
+                pass
+            if code == 5:
+                sys.exit()
+            if code == 6:
+                menu = home_menu(self.last_turn)
+                menu.home(w)
+            
+                
+#menu = start_menu()
+menu = game()
 menu.main()
