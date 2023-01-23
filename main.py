@@ -149,7 +149,7 @@ class home_menu(menu_base):
             except IndexError:
                 while True:
                     w.clear()
-                    w.addstr(0, 0, "a;sldjfa;skd fh;aksjdh f;alksdj ;flaks d;flaks d;flka sd;lf jas;dfkjasl fdkja slkdjflak sjd;f lkajs; kfas;dl fkajs d;flasjd;f lkasd;f lajsd; fljasd kfa;sdl fj;asldohi sda ;isda ;hl sda; a hk a lhu saf8 r c   4  zszn ez 43v   ;asldkfh;oa idudr[0aw 8uetklajshe tlkasdjxhl kasjd ;kj")
+                    w.addstr(0, 0, "wait, that's illegal")
 
     def game_logic(self, input, ig_ran):
         """If ig_ran = true, ingores random and takes a two integer list entry
@@ -227,40 +227,43 @@ class shop_menu(menu_base):
     def main(self):
         curses.wrapper(self.shop_menu)
 
-#    def render_selection(self, w):
-#        w.chgat(1, 0, 42, curses.A_NORMAL)
-#        w.chgat(5, 0, 42, curses.A_NORMAL)
-#        if self.cursor_pos >= 0:
-            #self.xpos = len(f"││{' '*(16-(len(self.items_avail[self.cursor_pos])//2))}")
-#            w.chgat(5, 3, 32, curses.A_REVERSE)
-#        elif self.cursor_pos == -1:
-#            w.chgat(1, 1, 40, curses.A_REVERSE)
-
-
     def render_selection(self, w):
-        # Highlight the quit button
-        if self.cursor_pos == -1:
-            w.chgat(1, 1, 40, curses.A_REVERSE)
-        else:
-            w.chgat(1, 0, 42, curses.A_NORMAL)
-            
-        # Highlight the selected menu item
-        # Menu items don't highlight (I think replit's fault). Will fix later
+        w.chgat(1, 0, 42, curses.A_NORMAL)
+        w.chgat(5, 0, 42, curses.A_NORMAL)
+        item = self.items_avail[self.cursor_pos][0]
         if self.cursor_pos >= 0:
-            x_pos = 3 + 13 - (len(self.items_avail[self.cursor_pos][0]) // 2)
-            w.chgat(5, x_pos, len(self.items_avail[self.cursor_pos][0]), curses.A_REVERSE)
-        else:
-            w.chgat(5, 0, 42, curses.A_NORMAL)
+            self.xpos = len(f"││{' '*(16-(len(item)//2))}")
+            w.chgat(5, self.xpos, len(item), curses.A_REVERSE)
+        elif self.cursor_pos == -1:
+            w.chgat(1, 1, 40, curses.A_REVERSE)
+
+
+#    def render_selection(self, w):
+#        # Highlight the quit button
+#        if self.cursor_pos == -1:
+#            w.chgat(1, 1, 40, curses.A_REVERSE)
+#        else:
+#            w.chgat(1, 0, 42, curses.A_NORMAL)
+#            
+#        # Highlight the selected menu item
+#        # Menu items don't highlight (I think replit's fault). Will fix later
+#        if self.cursor_pos >= 0:
+#            x_pos = 3 + 13 - (len(self.items_avail[self.cursor_pos][0]) // 2)
+#            w.chgat(5, x_pos, len(self.items_avail[self.cursor_pos][0]), curses.A_REVERSE)
+#        else:
+#            w.chgat(5, 0, 42, curses.A_NORMAL)
 
     def submenu_input(self, w):
         char = w.getch()
         if char == 258 and self.cursor_pos <= 1:
             self.cursor_pos += 1
+            return False
         if char == 259 and self.cursor_pos >= 1:
             self.cursor_pos -= 1
+            return False
         if char == 10:
             if self.cursor_pos == 0:
-                pass #make buying code later
+                return(self.items_avail[self.cursor_pos])
             if self.cursor_pos == 1:
                 self.details(w)
             if self.cursor_pos == 2:
@@ -333,14 +336,12 @@ class shop_menu(menu_base):
                 if self.code:
                     return 6
                 self.render_selection(w)
-                w.addstr(20,0," "*50)
-                w.addstr(20,0,f"{self.cursor_pos}           {self.items_avail[self.cursor_pos]}")
             if self.submenu:
                 self.menu_str(w, self.last_pos)
                 self.render_submenu(w)
-                self.submenu_input(w)
-                w.addstr(20,0," "*50)
-                w.addstr(20,0,f"{self.cursor_pos}           {self.last_pos}")
+                code = self.submenu_input(w)
+                if code != False:
+                    return code
             w.refresh()
 
     def details_str(self, w, item):
@@ -432,24 +433,28 @@ r"└─────────────────────────
                 w.chgat(11, 41, 5, curses.A_NORMAL)
                 w.chgat(12, 40, 7, curses.A_REVERSE)
             w.refresh()
-#menu = shop_menu((1), [("placeholder", (0, 5, 0), "b"),
-#                       ("man", (5, 3, 1), "g"),
-#                       ("a", (30, 50, 30), "a"),
-#                       ("catapult", (10, 5, 3), "20"),
-#                       ("minors", (50, 30, 10), "ggggggg"),
-#                       ("odd", (30, 10, 5), "bgalhk")])
 
 class game:
+    """
+    ------------------------------ITEM DOCUMENTATION------------------------------
+    |first entry includes name, second includes price (in rock, paper, scissors),|
+    | third includes description, and fifth includes boosts (in %rock, %paper, %s|
+    |cissors, %all, or CUSTOM). Custom is reserved and cannot be used for anythin|
+    |g that isn't directly implemented. Due to how python strings work, use raw s|
+    |trings for these. Use decimals (or fractions) for the percent values.       |
+    ------------------------------------------------------------------------------"""
     def __init__(self):
-        self.items = [("placeholder", (0, 5, 0), "b"),
-                       ("man", (5, 3, 1), "g"),
-                       ("a", (30, 50, 30), "a"),
-                       ("catapult", (10, 5, 3), "20"),
-                       ("miners", (50, 30, 10), "ggggggg"),
-                       ("odd", (30, 10, 5), "bgalhk")]
+        self.items = [("quarry", (0, 5, 0), "Increases rock production by 50%", (r"%rock", 0.5)),
+                       ("forest", (5, 3, 1), "Increases paper production by 50%", (r"%paper", 0.5)),
+                       ("sharp blades", (30, 50, 30), "Increases scissors production by 50%", (r"%scissors", 0.5)),
+                       ("catapult", (10, 5, 3), "Increases all production by 10%", (r"%scissors", 0.1))]
+        self.items_purchased = []
         self.last_turn = [-1, -1]
+        self.increases = [1, 1, 1, 1]
+
     def main(self):
         curses.wrapper(self.main_curses)
+
     def main_curses(self, w):
         menu = start_menu()
         code = menu.curses_main(w)
@@ -461,12 +466,7 @@ class game:
             if code == 2:
                 pass
             if code == 3:
-                menu = shop_menu((1), [("placeholder", (0, 5, 0), "b"),
-                       ("man", (5, 3, 1), "g"),
-                       ("a", (30, 50, 30), "a"),
-                       ("catapult", (10, 5, 3), "20"),
-                       ("minors", (50, 30, 10), "ggggggg"),
-                       ("odd", (30, 10, 5), "bgalhk")])
+                menu = shop_menu((1), self.items)
                 code = menu.shop_menu(w)
             if code == 4:
                 pass
@@ -475,6 +475,44 @@ class game:
             if code == 6:
                 menu = home_menu(self.last_turn)
                 code = menu.home(w)
+            else:
+                self.buy(code)
+
+    def game_logic(self, input, ig_ran):
+        """If ig_ran = true, ingores random and takes a two integer list entry
+        If not, generates a random number for ai_input"""
+        if ig_ran and len(input) == 2:
+            ai_input = input[1]
+            input = input[0]
+        else:
+            ai_input = rand.randint(0,2)
+        
+        if ai_input == 0 and input == 1 or\
+        ai_input == 1 and input == 2 or\
+        ai_input == 3 and input == 0:
+            return 1
+        elif input == 0 and ai_input == 1 or\
+        ai_input == 1 and input == 2 or\
+        ai_input == 2 and input == 0:
+            return 2
+        elif input == -1:
+            return -1
+        else:
+            return 3
+
+    def buy(self, item):
+        type = item[3][0]
+        inc = item[3][1]
+        if type != r"CUSTOM":
+            self.increases[[r"%rock", r"%paper", r"%scissors", r"%all"].index(type)] += inc
+        else:
+            self.custom(item)
+
+        self.items = [x for x in self.items if x[0] != item[0] or x[1] != item[1] or x[2] != item[2] or x[3] != item[3]]
+        self.items_purchased.append(item)
+
+    def custom(self, item):
+        pass
             
                 
 #menu = start_menu()
