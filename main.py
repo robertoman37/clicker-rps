@@ -211,10 +211,14 @@ class shop_menu(menu_base):
 
     def Input(self, w):
         char = w.getch()
-        if char == 258 and self.cursor_pos <= len(self.items_avail) - 2:
+        if char == 258 and self.cursor_pos <= len(self.items_avail) - 2 and len(self.items_avail) != 0:
             self.cursor_pos += 1
-        if char == 259 and self.cursor_pos >= 0:
+        
+        if char == 259 and self.cursor_pos >= 0 and len(self.items_avail) != 0:
             self.cursor_pos -= 1
+        
+        if len(self.items_avail) == 0:
+            self.cursor_pos = -1
         if char == 10:
             if self.cursor_pos == -1:
                 self.code = True
@@ -228,14 +232,18 @@ class shop_menu(menu_base):
         curses.wrapper(self.shop_menu)
 
     def render_selection(self, w):
-        w.chgat(1, 0, 42, curses.A_NORMAL)
-        w.chgat(5, 0, 42, curses.A_NORMAL)
-        item = self.items_avail[self.cursor_pos][0]
-        if self.cursor_pos >= 0:
-            self.xpos = len(f"││{' '*(16-(len(item)//2))}")
-            w.chgat(5, self.xpos, len(item), curses.A_REVERSE)
-        elif self.cursor_pos == -1:
+        try:
+            w.chgat(1, 0, 42, curses.A_NORMAL)
+            w.chgat(5, 0, 42, curses.A_NORMAL)
+            item = self.items_avail[self.cursor_pos][0]
+            if self.cursor_pos >= 0:
+                self.xpos = len(f"││{' '*(16-(len(item)//2))}")
+                w.chgat(5, self.xpos, len(item), curses.A_REVERSE)
+            elif self.cursor_pos == -1:
+                w.chgat(1, 1, 40, curses.A_REVERSE)
+        except IndexError:
             w.chgat(1, 1, 40, curses.A_REVERSE)
+            w.chgat(5, 0, 42, curses.A_NORMAL)
 
 
 #    def render_selection(self, w):
@@ -460,11 +468,14 @@ class game:
         code = menu.curses_main(w)
         while True:
             if code == 0:
-                pass
+                self.last_turn = [0, rand.randint(0,2)]
+                code = 6
             if code == 1:
-                pass
+                self.last_turn = [1, rand.randint(0,2)]
+                code = 6
             if code == 2:
-                pass
+                self.last_turn = [2, rand.randint(0,2)]
+                code = 6
             if code == 3:
                 menu = shop_menu((1), self.items)
                 code = menu.shop_menu(w)
@@ -477,6 +488,7 @@ class game:
                 code = menu.home(w)
             else:
                 self.buy(code)
+                code = 3
 
     def game_logic(self, input, ig_ran):
         """If ig_ran = true, ingores random and takes a two integer list entry
@@ -509,6 +521,7 @@ class game:
             self.custom(item)
 
         self.items = [x for x in self.items if x[0] != item[0] or x[1] != item[1] or x[2] != item[2] or x[3] != item[3]]
+        # https://chat.openai.com/chat/6631c5c7-fc61-4cb2-bc2c-5fb087c8ddd1
         self.items_purchased.append(item)
 
     def custom(self, item):
