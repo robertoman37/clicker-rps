@@ -27,19 +27,19 @@ class menu_base:
         uin = w.getch()
         if uin == 259:
             self.cursor_pos[0] -= 1
-            return False
+            return -1
 
         elif uin == 258:
             self.cursor_pos[0] += 1
-            return False
+            return -1
 
         elif uin == 261:
             self.cursor_pos[1] += 1
-            return False
+            return -1
 
         elif uin == 260:
             self.cursor_pos[1] -= 1
-            return False
+            return -1
 
         elif uin == 10:
             return self.process_input(w)
@@ -141,7 +141,7 @@ class home_menu(menu_base):
             try:
                 # get input and change cursor_pos correspondingly
                 rcode = super().Input(w)
-                if rcode != False:
+                if rcode != -1:
                     return rcode
 
                 # write buffer: includes graphical renditions.
@@ -487,17 +487,19 @@ class game:
                 menu = home_menu(self.last_turn)
                 code = menu.home(w)
             else:
+                if isinstance(code, int):
+                    w.clear()
+                    w.addstr(0,0,"where did I go wrong")
+                    while True:
+                        continue
                 self.buy(code)
                 code = 3
 
     def game_logic(self, input, ig_ran):
         """If ig_ran = true, ingores random and takes a two integer list entry
         If not, generates a random number for ai_input"""
-        if ig_ran and len(input) == 2:
-            ai_input = input[1]
-            input = input[0]
-        else:
-            ai_input = rand.randint(0,2)
+        ai_input = input[1]
+        input = input[0]
         
         if ai_input == 0 and input == 1 or\
         ai_input == 1 and input == 2 or\
