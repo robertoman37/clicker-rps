@@ -27,19 +27,19 @@ class menu_base:
         uin = w.getch()
         if uin == 259:
             self.cursor_pos[0] -= 1
-            return -1
+            return None
 
         elif uin == 258:
             self.cursor_pos[0] += 1
-            return -1
+            return None
 
         elif uin == 261:
             self.cursor_pos[1] += 1
-            return -1
+            return None
 
         elif uin == 260:
             self.cursor_pos[1] -= 1
-            return -1
+            return None
 
         elif uin == 10:
             return self.process_input(w)
@@ -66,7 +66,7 @@ class menu_base:
 
 class home_menu(menu_base):
 
-    def __init__(self, last_move):
+    def __init__(self, last_move, resources):
         """last_move is a two element list of the last moves done.
         -1 = reserved value, first move/ tutorial
         0 = rock
@@ -77,6 +77,7 @@ class home_menu(menu_base):
         super().__init__(menu_items, menu_pos)
         self.last_move = last_move
         self.money = 0
+        self.resources = resources
         self.graphics_list = ["""\
     _______  
 ---'   ____) 
@@ -127,7 +128,10 @@ class home_menu(menu_base):
                   "│    rock    │     paper     │  scissors  │\n"+
                   "├────────────┼───────────────┼────────────┤\n"+
                   "│    shop    │    options    │    exit    │\n"+
-                  "└────────────┴───────────────┴────────────┘\n")
+                  "├────────────┼───────────────┼────────────┤\n"+
+                  "│    rock    │     paper     │  scissors  │\n"+
+                 f"│{str(self.resources[0]).center(12)}│{str(self.resources[1]).center(15)}│{str(self.resources[2]).center(12)}│\n"+
+                  "└────────────┴───────────────┴────────────┘")
         if self.last_move[0] in range(len(self.graphics_list)) or\
         self.last_move[1] in range(len(self.graphics_list)):
             player_graphic = self.graphics_list[self.last_move[0]].splitlines()
@@ -141,7 +145,7 @@ class home_menu(menu_base):
             try:
                 # get input and change cursor_pos correspondingly
                 rcode = super().Input(w)
-                if rcode != -1:
+                if rcode != None:
                     return rcode
 
                 # write buffer: includes graphical renditions.
@@ -154,19 +158,16 @@ class home_menu(menu_base):
     def game_logic(self, input, ig_ran):
         """If ig_ran = true, ingores random and takes a two integer list entry
         If not, generates a random number for ai_input"""
-        if ig_ran and len(input) == 2:
-            ai_input = input[1]
-            input = input[0]
-        else:
-            ai_input = rand.randint(0,2)
+        ai_input = input[1]
+        input = input[0]
         
         if ai_input == 0 and input == 1 or\
         ai_input == 1 and input == 2 or\
-        ai_input == 3 and input == 0:
+        ai_input == 2 and input == 0:
             return 1
         elif input == 0 and ai_input == 1 or\
-        ai_input == 1 and input == 2 or\
-        ai_input == 2 and input == 0:
+        input == 1 and ai_input == 2 or\
+        input == 2 and ai_input == 0:
             return 2
         elif input == -1:
             return -1
@@ -265,10 +266,10 @@ class shop_menu(menu_base):
         char = w.getch()
         if char == 258 and self.cursor_pos <= 1:
             self.cursor_pos += 1
-            return False
+            return None
         if char == 259 and self.cursor_pos >= 1:
             self.cursor_pos -= 1
-            return False
+            return None
         if char == 10:
             if self.cursor_pos == 0:
                 return(self.items_avail[self.cursor_pos])
@@ -348,7 +349,7 @@ class shop_menu(menu_base):
                 self.menu_str(w, self.last_pos)
                 self.render_submenu(w)
                 code = self.submenu_input(w)
-                if code != False:
+                if code != None:
                     return code
             w.refresh()
 
@@ -459,6 +460,7 @@ class game:
         self.items_purchased = []
         self.last_turn = [-1, -1]
         self.increases = [1, 1, 1, 1]
+        self.resources = [0, 0, 0]
 
     def main(self):
         curses.wrapper(self.main_curses)
@@ -469,12 +471,15 @@ class game:
         while True:
             if code == 0:
                 self.last_turn = [0, rand.randint(0,2)]
+                self.resources[0] += self.game_logic(self.last_turn)*self.increases[0]*self.increases[3]
                 code = 6
             if code == 1:
                 self.last_turn = [1, rand.randint(0,2)]
+                self.resources[1] += self.game_logic(self.last_turn)*self.increases[1]*self.increases[3]
                 code = 6
             if code == 2:
                 self.last_turn = [2, rand.randint(0,2)]
+                self.resources[2] += self.game_logic(self.last_turn)*self.increases[2]*self.increases[3]
                 code = 6
             if code == 3:
                 menu = shop_menu((1), self.items)
@@ -484,7 +489,7 @@ class game:
             if code == 5:
                 sys.exit()
             if code == 6:
-                menu = home_menu(self.last_turn)
+                menu = home_menu(self.last_turn, self.resources)
                 code = menu.home(w)
             else:
                 if isinstance(code, int):
@@ -495,36 +500,40 @@ class game:
                 self.buy(code)
                 code = 3
 
-    def game_logic(self, input, ig_ran):
+    def game_logic(self, input):
         """If ig_ran = true, ingores random and takes a two integer list entry
-        If not, generates a random number for ai_input"""
+        If not, generates a random number for ai_input
+        0 = rock
+        1 = paper
+        2 = scissors"""
         ai_input = input[1]
         input = input[0]
         
         if ai_input == 0 and input == 1 or\
         ai_input == 1 and input == 2 or\
-        ai_input == 3 and input == 0:
-            return 1
-        elif input == 0 and ai_input == 1 or\
-        ai_input == 1 and input == 2 or\
         ai_input == 2 and input == 0:
-            return 2
-        elif input == -1:
-            return -1
+            return True
+        elif input == 0 and ai_input == 1 or\
+        input == 1 and ai_input == 2 or\
+        input == 2 and ai_input == 0:
+            return False
+        elif input == ai_input:
+            return True
         else:
-            return 3
+            raise Exception("unexpected game_logic value.")
 
     def buy(self, item):
         type = item[3][0]
         inc = item[3][1]
-        if type != r"CUSTOM":
-            self.increases[[r"%rock", r"%paper", r"%scissors", r"%all"].index(type)] += inc
-        else:
-            self.custom(item)
-
-        self.items = [x for x in self.items if x[0] != item[0] or x[1] != item[1] or x[2] != item[2] or x[3] != item[3]]
-        # https://chat.openai.com/chat/6631c5c7-fc61-4cb2-bc2c-5fb087c8ddd1
-        self.items_purchased.append(item)
+        resources = item[1]
+        if all([x>=y for x in self.resources for y in resources]):
+            if type != r"CUSTOM":
+                self.increases[[r"%rock", r"%paper", r"%scissors", r"%all"].index(type)] += inc
+            else:
+                self.custom(item)
+            self.items = [x for x in self.items if x != item]
+            # https://chat.openai.com/chat/6631c5c7-fc61-4cb2-bc2c-5fb087c8ddd1
+            self.items_purchased.append(item)
 
     def custom(self, item):
         pass
