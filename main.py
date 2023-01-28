@@ -2,6 +2,9 @@ import curses
 import sys
 import random as rand
 import numpy as np
+import os
+import time
+import math
 
 """-------------------------IMPORTANT INFORMATION-------------------------
    |Idk why I'm making this so fancy, but all of the xxxx.main() classes |
@@ -461,11 +464,14 @@ class game:
         self.last_turn = [-1, -1]
         self.increases = [1, 1, 1, 1]
         self.resources = [0, 0, 0]
+        self.rate = 0.1
 
     def main(self):
         curses.wrapper(self.main_curses)
 
     def main_curses(self, w):
+        if not os.path.exists(f"{self.get_game_dir()}/game_save.txt"):
+            self.create_save()
         menu = start_menu()
         code = menu.curses_main(w)
         while True:
@@ -487,6 +493,7 @@ class game:
             if code == 4:
                 pass
             if code == 5:
+                self.write_save()
                 sys.exit()
             if code == 6:
                 menu = home_menu(self.last_turn, self.resources)
@@ -497,7 +504,7 @@ class game:
                     w.addstr(0,0,"where did I go wrong")
                     while True:
                         continue
-                self.buy(code)
+                self.buy(code, False)
                 code = 3
 
     def game_logic(self, input):
@@ -522,11 +529,11 @@ class game:
         else:
             raise Exception("unexpected game_logic value.")
 
-    def buy(self, item):
+    def buy(self, item, BYPASS):
         type = item[3][0]
         inc = item[3][1]
         resources = item[1]
-        if all([x>=y for x in self.resources for y in resources]):
+        if all([x>=y for x in self.resources for y in resources]) or BYPASS:
             if type != r"CUSTOM":
                 self.increases[[r"%rock", r"%paper", r"%scissors", r"%all"].index(type)] += inc
             else:
@@ -537,8 +544,74 @@ class game:
 
     def custom(self, item):
         pass
-            
-                
+
+    def get_game_dir(self):
+        return os.path.dirname(os.path.abspath(__file__))
+        # https://www.delftstack.com/howto/python/python-get-path/#use-the-os-module-to-get-the-path-of-files-and-the-current-working-directory
+
+    def create_save(self):
+        if sys.platform == 'linux':
+            f = open(f"{self.get_game_dir()}/game_save.txt", "a")
+            f.close()
+
+        elif sys.platform == 'nt':
+            f = open(f"{self.get_game_dir()}\\game_save.txt", "a")
+            f.close()
+
+        else:
+            raise Exception("Unsupported platform!")
+
+    def write_save(self):
+        nl = "\n"
+        if not os.path.exists(f"{self.get_game_dir()}/game_save.txt"):
+            # https://www.pythontutorial.net/python-basics/python-check-if-file-exists/
+            self.create_save()
+        
+        if sys.platform == 'linux':
+            f = open(f"{self.get_game_dir()}/game_save.txt", "r+")
+        
+        elif sys.platform == 'nt':
+            f = open(f"{self.get_game_dir()}\\game_save.txt", "r+")
+        
+        else:
+            raise Exception("Unsupported platform!")
+
+        
+        # https://stackoverflow.com/questions/8220108/how-do-i-check-the-operating-system-in-python
+        # ^ used for most platform checking
+
+        f.write(f"{time.time()}\n{self.resources[0]}\n{self.resources[1]}\n{self.resources[2]}\n{self.rate}\n{nl.join([i[0] for i in self.items])}")
+        # FIX THIS LINE LATER YOU ABSOLUTE MORON
+        # THIS LINE NEEDS TO BE FIXED
+        # DO IT
+        # (I'm doing this so that I don't forgor)
+        f.close()
+
+    def read_save(self):
+        if os.path.exists(f"{self.get_game_dir()}/game_save.txt"):
+            if sys.platform == 'linux':
+                f = open(f"{self.get_game_dir()}/game_save.txt", "r")
+
+            elif sys.platform == 'nt':
+                f = open(f"{self.get_game_dir()}\\game_save.txt", "r")
+
+            else:
+                raise Exception("Unsupported platform!")
+
+        try:
+            save = f.readlines()
+            self.rate = float(save[4])
+            for i in self.items:
+                if save.count(i[0]) != 0:
+                    self.buy(i, True)
+            deltat = math.floor(time.time() - float(save[0]))
+            self.resources = [math.ceil(float(save[1]) + ((self.increases[0] + self.increases[3]) * deltat * self.rate * (2/9))),
+                              math.ceil(float(save[2]) + ((self.increases[1] + self.increases[3]) * deltat * self.rate * (2/9))),
+                              math.ceil(float(save[3]) + ((self.increases[2] + self.increases[3]) * deltat * self.rate * (2/9)))]
+        except:
+            pass
+        # ^ I know this is generally a bad idea, but it should work fine in this case
+
 #menu = start_menu()
 menu = game()
 menu.main()
